@@ -29,7 +29,21 @@ jobs:
         with:
           name: quality-report
           path: report.txt
-
+      - name: Generate report
+        if: always()
+        run: |
+          mkdir peresdReport
+          echo "Pipeline Report" > peresdReport/peresdReport.txt
+          echo "Repository: $git_rep" >> peresdReport/peresdReport.txt
+          echo "Branch: $git_ref_n" >> peresdReport/peresdReport.txt
+          echo "Commit: $git_sha" >> peresdReport/peresdReport.txt
+          echo "Status: ${{ job.status }}" >> peresdReport/peresdReport.txt
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: peresdPip-report
+          path: peresdReport/peresdReport.txt
   telegram:
     needs: quality
     runs-on: ubuntu-latest
@@ -39,8 +53,23 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.ID_GROUP }}
+          if: always()
+        continue-on-error: true
         run: |
+          DATE=$(date '+%Y-%m-%d %H:%M:%S')
+          RUN_URL="https://github.com/${git_rep}/actions/runs/${GITHUB_RUN_ID}"
+
+          txt="Pipeline завершён
+
+           Репозиторий: $GITHUB_REPOSITORY
+           Ветка: $git_ref_n
+           Дата: $DATE
+           Статус: ${{ job.status }}
+
+           Ссылка на запуск:
+           $RUN_URL"
           curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage \
           -d chat_id=${TELEGRAM_CHAT_ID} \
-          -d text="PR merged into dev in repo $GITHUB_REPOSITORY. Check Actions for report."
+          -d text="$txt"
+
 
