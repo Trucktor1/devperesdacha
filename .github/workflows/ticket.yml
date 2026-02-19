@@ -58,8 +58,10 @@ jobs:
         run: |
          Date = $(date '+%Y-%m-%d')
           URL = "https://github.com/${git_rep}/actions/runs/${git_run}"
-
-          txt = "Pipeline end
+          
+          curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage \
+          -d chat_id=${TELEGRAM_CHAT_ID} \
+          -d text="Pipeline end
 
             репозиторий: $git_rep
             ветка: $git_ref_n
@@ -67,10 +69,8 @@ jobs:
             статус работы: ${{ job.status }}
 
             Запуск:
-            $URL"
-          curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage \
-          -d chat_id=${TELEGRAM_CHAT_ID} \
-          -d txt
+            $URL""
+
 
 
 
